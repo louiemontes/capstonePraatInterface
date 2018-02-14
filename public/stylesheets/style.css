@@ -1,0 +1,30 @@
+body {
+  //padding: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00B7FF;
+}
+.errors {
+  color:red;
+  font-style: italic;
+}
+.centeringTitle {
+  position:relative;
+  width:250px;
+  text-align:center;
+}
+.centeringForm {
+  position:relative;
+  //top:50%;
+  //left:45%;
+  //width:250px;
+  text-align:center;
+}
+#proj_stringContainer {
+  vertical-align: middle;
+  resize: both;
+  min-height: 50px;
+  min-width:200px;
+}

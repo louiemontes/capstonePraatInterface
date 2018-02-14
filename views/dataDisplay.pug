@@ -1,0 +1,40 @@
+extends layout
+
+block content
+  span(class="centeringForm")
+    p
+      h1 Entered
+    p
+      h5 Projection String:
+        p " #{entries[0]} "
+      h5 Minimum Latitude:
+        p #{entries[1]}
+      h5 Minimum Latitude:
+        p #{entries[2]}
+      h5 Maximum Latitude:
+        p #{entries[3]}
+      h5 Maximum Longitude:
+        p #{entries[4]}
+      h5 Longitude Major Ticks:
+        p [ #{entries[5]}]
+      h5 Longitude Minor Ticks:
+        p [ #{entries[6]}]
+      h5 Smoothness:
+        p #{entries[7]}
+      h5 Clip Latitude At:
+        p #{entries[8]}
+      h5 Latitude Tick Interval:
+        p #{entries[9]}
+      h5 Mapscale:
+        p  1/#{entries[10]}
+      h5 Height:
+        p #{entries[11]} cm
+      h5 Font size:
+        p #{entries[12]}
+      h5 Padding Size:
+        p #{entries[13]}
+      br
+      p
+        a(href='/form') 
+          button(class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored mdl-js-ripple-effect", type='submit', title='Submit your requests')
+            i(class="material-icons") arrow_back 

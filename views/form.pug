@@ -1,0 +1,76 @@
+extends layout
+
+block content
+  span(class='centeringTitle')
+    h1 Order Form 
+  form(action='/form', method='POST', class='centeringForm')
+    p
+      p
+        label(for="proj_stringContainer" style="vertical-align: middle;") Projection String: " 
+        textarea(id="proj_stringContainer" type='text', name='proj_string', title='If providing a projection string, an extent in the form (minlat, minlon, maxlat, maxlon) is also required.') #{specificInputs[0]}
+        span  "
+        span(class="errors")   #{specificErrors[0]}
+
+      p Latitude Minimum: 
+        input(type='number', step="1", name='minLat', value=specificInputs[1], title='If providing a projection string, an extent in the form (minlat, minlon, maxlat, maxlon) is also required.')
+        span(class ="errors")   #{specificErrors[1]}
+
+
+      p Longitude Minimum: 
+        input(type='number', step="1", name='minLon',  value=specificInputs[2], title='If providing a projection string, an extent in the form (minlat, minlon, maxlat, maxlon) is also required.')
+        span(class ="errors")   #{specificErrors[2]}
+
+
+      p Latitude Maximum: 
+        input(type='number', step="1", name='maxLat',  value=specificInputs[3], title='If providing a projection string, an extent in the form (minlat, minlon, maxlat, maxlon) is also required.')
+        span(class ="errors")   #{specificErrors[3]}
+
+
+      p Longitude Maximum: 
+        input(type='number', step="1", name='maxLon',  value=specificInputs[4], title='If providing a projection string, an extent in the form (minlat, minlon, maxlat, maxlon) is also required.')
+        span(class ="errors")   #{specificErrors[4]}
+
+      p Longitude Major Ticks: [ 
+        input(type='text', name='lon_major_ticks', value=specificInputs[5], title='Distance(s) at which major ticks are to be drawn and labeled.')
+        span  ] km (input numbers with commas) 
+        span(class ="errors")   #{specificErrors[5]}
+
+      p Longitude Minor Ticks: [ 
+        input(type='text', name='lon_minor_ticks', value=specificInputs[6], title='Distance(s) at which minor ticks are to be drawn, but not labeled.')
+        span  ] km (input numbers with commas) 
+        span(class ="errors")   #{specificErrors[6]}
+
+      p Smoothness: 
+        input(type='number', name='nnodes', value=specificInputs[7], min='1', step='1', title='Number of nodes at which to draw verticals.  More nodes results in smoother plots.')
+        span(class ="errors")   #{specificErrors[7]}
+
+      p Clip Latitude At: 
+        input(type='number', name='cliplat', value=specificInputs[8], step='0.001', min='-90', max='90', title='Latitude at which to clip the plot, e.g. 0.0 to generate a scale bar for the northern hemisphere.  Set to -90.0 for south polar stereographic.')
+        span(class ="errors")   #{specificErrors[8]}
+
+      p Latitude Tick Interval: 
+        input(type='number', name='lat_tick_interval', value=specificInputs[9], min='1', step="1" max='90', title='Interval at which latitudinal lines are drawn, e.g. every 5 degrees.')
+        span(class ="errors")   #{specificErrors[9]}
+
+      p Mapscale: 1/( 
+        input(type='number', name='mapscale', value=specificInputs[10], min='1', title='Map scale in fractional form, e.g. 1/1000000')
+        span  )
+        span(class ="errors")   #{specificErrors[10]}
+
+      p Height: 
+        input(type='number', name='height', value=specificInputs[11], min='1', title='Scalebar height in cm.')
+        span  cm
+        span(class ="errors")   #{specificErrors[11]}
+
+      p Font size: 
+        input(type='number', name='fontsize', value=specificInputs[12], min='1', title='Font size.')
+        span(class ="errors")   #{specificErrors[12]}
+
+      p Padding size: 
+        input(type='number', name='paddingsize', value=specificInputs[13], min='1', step='1', title='Padding of SVG map.')
+        span(class ="errors")   #{specificErrors[13]}
+
+      br
+
+    button(class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored mdl-js-ripple-effect", type='submit', title='Submit your requests')
+      i(class="material-icons") send

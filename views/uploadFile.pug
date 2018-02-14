@@ -1,0 +1,21 @@
+extends layout
+
+block content
+  span(class="centeringForm")
+    h3 Please upload a sound file for David Brazil Model Analysis
+    form(action='/uploadFile', method='POST', enctype="multipart/form-data" class='centeringForm')
+      p
+      input(type="file" name="filename")
+      br
+      br
+      br
+      button(class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored mdl-js-ripple-effect", type='submit', value="upload" title='Submit your requests')
+        i(class="material-icons") eject
+
+    p
+      span(class="errors")   #{errors}
+      br
+      br
+      span #{success}
+
+

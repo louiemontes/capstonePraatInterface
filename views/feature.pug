@@ -1,0 +1,8 @@
+extends layout
+
+block content
+  span(class="centeringForm")
+    h1 Submit your sound files for analyzing!
+  form(action='/feature', method='POST', class='centeringForm')
+    button(class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored mdl-js-ripple-effect", type='submit', title='Submit your requests')
+      i(class="material-icons") send
