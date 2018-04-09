@@ -1,0 +1,18 @@
+extends layout
+
+block content
+  span(class="centeringForm")
+    h1 Welcome to the David Brazil Prosodic Labeler
+    p Please login!
+
+    form(action='/login', method='POST', class='centeringForm')
+      p Username:
+        input(type='password', name='password', value=specificInputs[0], title='Enter your username.')
+      p Password:
+        input(type='password', name='password', value=specificInputs[1], title='Enter your password.')
+    button(class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored mdl-js-ripple-effect", type='submit', title='Login')
+    p Start the process of recieving a prosodic events by uploading a file:
+      br
+      br
+      br
+      a(class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect", href='/') Upload Sound File

@@ -1,29 +1,7 @@
 var mongojs = require("mongojs");
-var db = mongojs("localhost:27017/davidBrazilUsers", ["firstname", "lastname", "username", "password", "email"]);
-var data;
-
-var isValidPassword = function(data,cb){
-    db.account.find({username:data.username,password:data.password},function(err,res){
-        if(res.length > 0)
-            cb(true);
-        else
-            cb(false);
-    });
-}
-var isUsernameTaken = function(data,cb){
-    db.account.find({username:data.username},function(err,res){
-        if(res.length > 0)
-            cb(true);
-        else
-            cb(false);
-    });
-}
-var addUser = function(data,cb){
-    db.account.insert({username:data.username,password:data.password},function(err){
-        cb();
-    });
-}
-
+var db = mongojs("localhost:27017/dbm", ["users", "accessCodes"]);
+//var dbAccessCodes = mongojs("localhost:27017/davidBrazilAccessCodes", ["code"]);
+var bcrypt = require('bcryptjs');
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
@@ -41,10 +19,13 @@ var dataDisplay = require('./routes/dataDisplay');
 var result = require('./routes/result');
 var feature = require('./routes/feature');
 var uploadFile = require('./routes/uploadFile');
+var makeAccount = require('./routes/makeAccount');
+var login = require('./routes/login');
+var admin = require('./routes/admin');
 
 var validator = require('express-validator');
 
-var spawn = require('child_process').spawn
+var spawn = require('child_process').spawn;
 
 var app = express();
 var urlencodedParser = bodyParser.urlencoded({ extended: false });
@@ -72,7 +53,9 @@ app.use('/dataDisplay', dataDisplay);
 app.use('/uploadFile', uploadFile);
 app.use('/result', result);
 app.use('/feature', feature);
-
+app.use('/makeAccount', makeAccount);
+app.use('/login', login);
+app.use('/admin', admin)
 //app.use('/formerrors', formerrors);
 
 
@@ -131,7 +114,7 @@ app.post('/uploadFile', urlencodedParser, function(req, res) {
           errors: ""
         });
       }
-    })
+    });
   }
 });
 
@@ -153,8 +136,17 @@ app.post('/feature', urlencodedParser, function(req, res) {
       console.error(`exec error: ${error}`);
       return;
     }
+    console.log(stdout);
+    console.log(typeof stdout);
+
+    //stdout = String(stdout);
+    //var extract = stdout.match(/{(.*)}/).pop();
+
+    console.log(stdout.length);
+    //fixedStdout = stdout.slice(550, 738);
+
     res.render("result", {
-      resultsFromAnalysis: stderr
+      resultsFromAnalysis: stdout
     });
 
     //res.send(stdout)
@@ -166,206 +158,250 @@ app.post('/feature', urlencodedParser, function(req, res) {
   });
 });
 
-app.post('/form', urlencodedParser, function(req,res){
+app.post('/makeAccount', urlencodedParser, function(req,res) {
   // super important... unless you want cross scripting
   // buddy, that's an open text box.
   // * usually my personal go to for starting trouble on someone else's app *
-  req.sanitizeBody('proj_string').escape();
-  req.sanitizeBody('minLat').escape();
-  req.sanitizeBody('minLon').escape();
-  req.sanitizeBody('maxLat').escape();
-  req.sanitizeBody('maxLon').escape();
-  req.sanitizeBody('lon_major_ticks').escape();
-  req.sanitizeBody('lon_minor_ticks').escape();
-  // these others ones still need sanitizing... but less critical since <script> tags
-  // cannot even be inserted with the HTML5 number type. still best practice to clean anyways
-  // "but doc, I can eat it still from the floor, I dont see any hair or nails on this pork chop!"
-  req.sanitizeBody('nnodes').escape();
-  req.sanitizeBody('cliplat').escape();
-  req.sanitizeBody('lat_tick_interval').escape();
-  req.sanitizeBody('mapscale').escape();
-  req.sanitizeBody('height').escape();
-  req.sanitizeBody('fontsize').escape();
-  req.sanitizeBody('paddingsize').escape();
-
-
-  // make server check input in order of priority
-  req.checkBody("proj_string", "Input a projection string.").notEmpty();
-
-  req.checkBody("minLat", "Input a minimum latitude value.").notEmpty();
-  req.checkBody("minLon", "Input a minimum longitude value.").notEmpty();
-  req.checkBody("maxLat", "Input a maximum latitude value.").notEmpty();
-  req.checkBody("maxLon", "Input a maximum longitude value.").notEmpty();
-
-  req.body.lon_major_ticks = decipherArrayFromString(req.body.lon_major_ticks);
-  req.body.lon_minor_ticks = decipherArrayFromString(req.body.lon_minor_ticks);
-  req.checkBody("lon_major_ticks", "Input Longtitude Major Ticks value(s).").notEmpty();
-  req.checkBody("lon_major_ticks", "Input Longtitude Major Ticks value(s).").notEmpty();
-
-
-
-  // jay's checks for scalebar
-  req.checkBody("lon_major_ticks", "Input Longtitude Major Ticks value(s).").notEmpty();
-
-  req.checkBody("lon_minor_ticks", "Input Longtitude Minor Ticks value(s).").notEmpty();
-
-  req.checkBody("nnodes", "Input a Number of Nodes value.").notEmpty();
-  req.checkBody("nnodes", "A Number Of Nodes input value must be an integer.").isInt();
-
-  req.checkBody("cliplat", "Input a Clip Latitude At value.").notEmpty();
-
-  req.checkBody("lat_tick_interval", "Input a Latitude Tick Interval value.").notEmpty();
-
-  req.checkBody("mapscale", "Input a Mapscale denominator value.").notEmpty();
-  req.checkBody("mapscale", "A Mapscale value must be an integer.").isInt();
-
-  req.checkBody("height", "Input a value for Height.").notEmpty();
-
-  req.checkBody("fontsize", "Input a value for Font Size.").notEmpty();
-
-  req.checkBody("paddingsize", "Input a value for Padding.").notEmpty();
-
+  req.sanitizeBody('firstname').escape();
+  req.sanitizeBody('lastname').escape();
+  req.sanitizeBody('username').escape();
+  req.sanitizeBody('password').escape();
+  req.sanitizeBody('code').escape();
   let inputHolder = [
-    req.body.proj_string,
+    req.body.firstname,
+    req.body.lastname,
+    req.body.username,
+    req.body.password,
+    req.body.code
 
-    req.body.minLat,
-    req.body.minLon,
-    req.body.maxLat,
-    req.body.maxLon,
-    req.body.lon_major_ticks,
-    req.body.lon_minor_ticks,
-    req.body.nnodes,
-    req.body.cliplat,
+  ];
+  let errorHolder = [];
+  // make server check input in order of priority
+  req.checkBody("firstname", "Input a first name.").notEmpty();
+  req.checkBody("lastname", "Input a last name.").notEmpty();
+  req.checkBody("username", "Input a username.").notEmpty();
+  req.checkBody("password", "Input a password.").notEmpty();
+  req.checkBody("code", "Input a code.").notEmpty();
 
-    req.body.lat_tick_interval,
-
-    req.body.mapscale,
-
-    req.body.height,
-
-    req.body.fontsize,
-
-    req.body.paddingsize
-  ]
 
   var errors = req.validationErrors();
-  let errorHolder = [];
-  for (let i=0; i < 14; i++) {
-    errorHolder[i] = "";
-  }
-  let errorsString = "";
-
-
-  //
   //console.log(errors);
+  let data = {};
+  data.username = inputHolder[2];
+  data.password = inputHolder[3];
+  data.code = inputHolder[4]
+  console.log(data.username);
+  console.log(data.password);
+  console.log(data.code);
+
+  var addUser = function(data,cb){
+    //let inputPassword = data.password;
+    //let salt = bcrypt.genSaltSync(10);
+    //let hash = bcrypt.hashSync(inputPassword, salt);
+    //console.log("User generation hash: " + hash);
+    //data.password = hash;
+    db.users.insert({username:data.username, password:data.password, email: "placeholder@gmail.com"},function(err){
+      cb();
+    });
+  };
+
+
+
+
+
+
+  var isAccessCodeValid = function(data, cb) {
+    db.accessCodes.find({code: data.code}, function(err, resp){
+      if (resp.length > 0) {
+        console.log("access code valid");
+        cb(true);
+      } else {
+        cb(false);
+        console.log("access code not valid");
+      }
+    });
+  };
+
+  //console.log(addUser);
+  var isUsernameTaken = function(data,cb){
+      db.users.find({username:data.username},function(err,resp){
+          if(resp.length > 0) {
+            console.log("user taken");
+            cb(true);
+          }else {
+            console.log("user not found -> can create account");
+            cb(false);
+          }
+      });
+  };
+
   if (errors) {
-
-    // new error possibilities for Jay
-    let hasproj_stringError = false;
-    let hasminLatError = false;
-    let hasminLonError = false;
-    let hasmaxLatError = false;
-    let hasmaxLonError = false;
-
-    let haslon_major_ticksError = false;
-    let haslon_minor_ticksError= false;
-    let hasnnodesError = false;
-    let hascliplatError = false;
-    let haslat_tick_intervalError = false;
-    let hasmapscaleError = false;
-    let hasheightError = false;
-    let hasfontsizeError= false;
-    let haspaddingsizeError= false;
-
-    // chain errors, and maintain error priority
-    for (let i = 0; i< errors.length; i++) {
-      if(errors[i].param === "proj_string" && !hasproj_stringError) {
-        hasproj_stringsError = true;
-        errorsString += errors[i].msg + "\n";
+    console.log(errors[0]);
+    for (let i=0; i < errors.length; i++) {
+      if (errors[i].param == "firstname"){
         errorHolder[0] = errors[i].msg;
-
-
-      } else if(errors[i].param === "minLat" && !hasminLatError) {
-        haslonminLatError = true;
-        errorsString += errors[i].msg + "\n";
+      } else if (errors[i].param == "lastname"){
         errorHolder[1] = errors[i].msg;
-      } else if(errors[i].param === "minLon" && !hasminLonError) {
-        hasminLonticksError = true;
-        errorsString += errors[i].msg + "\n";
+      } else if (errors[i].param == "username"){
         errorHolder[2] = errors[i].msg;
-      } else if(errors[i].param === "maxLat" && !hasmaxLatError) {
-        hasmaxLatError = true;
-        errorsString += errors[i].msg + "\n";
+      } else if (errors[i].param == "password"){
         errorHolder[3] = errors[i].msg;
-      } else if(errors[i].param === "maxLon" && !hasmaxLonError) {
-        hasmaxLonError = true;
-        errorsString += errors[i].msg + "\n";
+      } else if (errors[i].param == "code"){
         errorHolder[4] = errors[i].msg;
-
-      } else if(errors[i].param === "lon_major_ticks" && !haslon_major_ticksError) {
-        haslon_major_ticksError = true;
-        errorsString += errors[i].msg + "\n";
-        errorHolder[5] = errors[i].msg;
-      } else if(errors[i].param === "lon_minor_ticks" && !haslon_minor_ticksError) {
-        haslon_minor_ticksError = true;
-        errorsString += errors[i].msg + "\n";
-        errorHolder[6] = errors[i].msg;
-
-      } else if(errors[i].param === "nnodes" && !hasnnodesError) {
-        hasnnodesError= true;
-        errorsString += errors[i].msg + "\n";
-        errorHolder[7] = errors[i].msg;
-
-      } else if(errors[i].param === "cliplat" && !hascliplatError) {
-        hascliplatError= true;
-        errorsString += errors[i].msg + "\n";
-        errorHolder[8] = errors[i].msg;
-
-      } else if(errors[i].param === "lat_tick_interval" && !haslat_tick_intervalError) {
-        haslat_tick_intervalError= true;
-        errorsString += errors[i].msg + "\n";
-        errorHolder[9] = errors[i].msg;
-
-      } else if(errors[i].param === "mapscale" && !hasmapscaleError) {
-        hasmapscaleError = true;
-        errorsString += errors[i].msg + "\n";
-        errorHolder[10] = errors[i].msg;
-
-      } else if(errors[i].param === "height" && !hasheightError) {
-        hasheightError = true;
-        errorsString += errors[i].msg + "\n";
-        errorHolder[11] = errors[i].msg;
-
-      } else if(errors[i].param === "fontsize" && !hasfontsizeError) {
-        hasfontsizeError = true;
-        errorsString += errors[i].msg + "\n";
-        errorHolder[12] = errors[i].msg;
-
-      } else if(errors[i].param === "paddingsize" && !haspaddingsizeError) {
-        haspaddingsizeError = true;
-        errorsString += errors[i].msg + "\n";
-        errorHolder[13] = errors[i].msg;
-
       }
     }
+    res.render('makeAccount', {
+      title: "Make Account",
+      specificErrors: errorHolder,
+      specificInputs: inputHolder
+    });
+    return;
+  } else {
+    isUsernameTaken(data, function(resp) {
+      if(!resp) {
+        isAccessCodeValid(data, function(validity){
+          if(validity) {
+            addUser(data, function(){
+              errorHolder[0] = "Account created!";
+              console.log("user created!");
+              res.render('makeAccount', {
+                title: "Make Account",
+                specificErrors: errorHolder,
+                specificInputs: inputHolder
+              });
+              db.accessCodes.remove({code: data.code});
+            })
+          } else {
+            errorHolder[4] = "Access Code invalid.";
+            res.render('makeAccount', {
+              title: "Make Account",
+              specificErrors: errorHolder,
+              specificInputs: inputHolder
+            });
 
-    // remove brackets from last lon major/minor tick fields because clearly something has an error
-     inputHolder[5] = (req.body.lon_major_ticks).toString();
-     inputHolder[6] = (req.body.lon_minor_ticks).toString();
-
-
-     res.render('form', {
-       title: "Form",
-       specificErrors: errorHolder,
-       specificInputs: inputHolder
-     });
-
-     return;
-   } else {
-     res.render("dataDisplay", {entries: inputHolder});
-     return;
-   }
+          }
+        })
+      } else {
+        console.log('sees username in use');
+        errorHolder[2] = "username in use, please try another.";
+        res.render('makeAccount', {
+          title: "Make Account",
+          specificErrors: errorHolder,
+          specificInputs: inputHolder
+        });
+      }
+    });
+  }
 });
+
+
+app.post('/admin', urlencodedParser, function(req,res) {
+  let inputHolder = [];
+  inputHolder[0] = req.body.accessCode;
+  let errorHolder = [];
+  errorHolder[0] = "";
+
+
+  var data = {};
+  data.accessCode = inputHolder[0];
+
+  console.log("input attempt is: " + data.accessCode);
+  var isCodeTaken = function (data, cb) {
+    db.accessCodes.find({code:data.accessCode},function(err,resp){
+      if(resp.length > 0) {
+        console.log("Code in the system!");
+        cb(true);
+      } else {
+        console.log("Code not in in the system!");
+        cb(false);
+      }
+    });
+  };
+
+  isCodeTaken(data, function(resp) {
+    if(resp) {
+      //render error
+      errorHolder[0] = "Access Code already waiting to be used.";
+      res.render("admin", {
+        title: "Admin Page",
+        specificErrors: errorHolder,
+        specificInputs: inputHolder
+      });
+    } else {
+      // insert and render success
+      data.accessCode = parseInt(data.accessCode);
+      db.accessCodes.insert({code:data.accessCode},function(err){
+        console.log("code added");
+        cb();
+      });
+      errorHolder[0] = "Access Code added.";
+      res.render("admin", {
+        title: "Admin Page",
+        specificErrors: errorHolder,
+        specificInputs: inputHolder
+      });
+    }
+  });
+});
+
+app.post('/login', urlencodedParser, function(req,res){
+  let inputHolder = [
+    req.body.username,
+    req.body.password
+  ];
+  let errorHolder = [];
+
+  var data = {};
+  data.username = req.body.username;
+  data.password = req.body.password;
+  inputHolder[0] = data.username;
+  inputHolder[1] = data.password;
+
+
+
+  var isValidPassword = function(data,cb) {
+    db.users.find({username:data.username,password:data.password},function(err,resp){
+      if(resp.length > 0) {
+        console.log("Password in the system!");
+        cb(true);
+      } else {
+        console.log("No password in the system!");
+        cb(false);
+      }
+    });
+  };
+
+  isValidPassword(data, function(resp) {
+    if (resp) {
+      console.log("successful login")
+      inputHolder[0]= "";
+      errorHolder[0] = "";
+      if(data.username === "admin") {
+        res.render("admin", {
+          title: "Admin Page",
+          specificInputs: inputHolder,
+          specificErrors: errorHolder
+        });
+      } else {
+        res.render("uploadFile", {
+          title: "Upload File",
+        });
+      }
+    } else {
+      console.log("failure login");
+      errorHolder[0] = "Invalid username or password";
+      errorHolder[1] = "Invalid username or password";
+      console.log(inputHolder);
+      res.render("login", {
+        title: "Login",
+        specificErrors: errorHolder,
+        specificInputs: inputHolder
+      });
+    }
+  });
+});
+
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
