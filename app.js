@@ -95,66 +95,89 @@ function decipherArrayFromString(someString) {
 
 
 app.post('/uploadFile', urlencodedParser, function(req, res) {
+  function isEmpty(obj) {
+    return Object.keys(obj).length === 0;
+  }
+  if(req.body.choice === "Upload Another File") {
+        res.render("uploadFile", {
+          title: "Upload File",
+        });
+  }
   if(req.files) {
     var file = req.files.filename;
-    //if (file !== undefined) {
-      var filename = file.name;
-    //}
-    //filename = "" || file.name;
-    file.mv("./soundFiles/" + filename, function(err){
-      if(err){
-        //console.log(err);
-        res.render('uploadFile', {
-          success: "Error uploading: ",
-          errors: err
-        });
-      } else {
-        res.render("uploadFile", {
-          success: "File Uploaded!",
-          errors: ""
-        });
-      }
+
+    if(isEmpty(req.files)) {
+      res.render('uploadFile', {
+        success: "",
+        errors: "You must upload .wav file. Please try again."
+      });
+    }
+    var filename = file.name;
+    if (!filename.includes(".wav")) {
+      res.render('uploadFile', {
+        success: "",
+        errors: "You must upload a .wav file. Please try again."
+      });
+    } else {
+      file.mv("./soundFiles/" + filename, function(err){
+        if(err){
+          res.render('uploadFile', {
+            success: "",
+            errors: err
+          });
+        } else {
+          res.render("feature", {
+            fileTitle: filename
+          });
+        }
+      });
+    }
+  } else {
+    res.render('uploadFile', {
+      success: "",
+      errors: "You must upload .wav file. Please try again."
     });
   }
 });
 
 
 app.post('/feature', urlencodedParser, function(req, res) {
-  const defaults = {
-    encoding: 'utf8',
-    timeout: 0,
-    maxBuffer: 200 * 1024,
-    killSignal: 'SIGTERM',
-    cwd: null,
-    env: null
-  };
 
-  // ../../../Users/luismontes/code/accademic/cs476/scalebarWebService/start.m 
-  exec('cd ../../../../../../ ; pwd ; cd Applications/MATLAB_R2017b.app/bin/ ; ./matlab -nodesktop < ../../../Users/luismontes/code/accademic/cs476/davidBrazilModelWebInterface/start.m ', defaults, (error, stdout, stderr) => {
-    console.log("test");
+  //console.log("req.body: " + req.body);
+
+  console.log("req.body.filename: " + req.body.filename);
+
+   let praatStartCommand = "Praat.app/Contents/MacOS/Praat --run ";
+   let praatSpecificScript = "node_modules/praat-scripts/praat-script-syllable-nuclei-v2file.praat ";
+   let praatScriptDefaults = "-25 2 0.4 0.1 yes ";
+   let serverTempStoragePath = "/Users/luismontes/code/accademic/cs476/davidBrazilModelWebInterface/soundFiles ";
+   let userSelectedSoundFile = req.body.filename;
+   let cleanUpCommand = " ; rm ./soundFiles/" + userSelectedSoundFile + " ; rm ./soundFiles/" + userSelectedSoundFile + ".TextGrid";
+
+  let scriptCommand = praatStartCommand + praatSpecificScript + praatScriptDefaults + serverTempStoragePath + userSelectedSoundFile + cleanUpCommand;
+  exec(scriptCommand,  (error, stdout, stderr) => {
     if (error) {
       console.error(`exec error: ${error}`);
       return;
     }
-    console.log(stdout);
-    console.log(typeof stdout);
 
-    //stdout = String(stdout);
-    //var extract = stdout.match(/{(.*)}/).pop();
+
+    var structuredResult  = JSON.parse(stdout);
+
+    let userOutputHolder = [];
+    userOutputHolder[0] = structuredResult.syllableCount;
+    userOutputHolder[1] = structuredResult.pauseCount;
+    userOutputHolder[2] = structuredResult.totalDuration;
+    userOutputHolder[3] = structuredResult.speakingTotalDuration;
+    userOutputHolder[4] = structuredResult.speakingRate;
+    userOutputHolder[5] = structuredResult.articulationRate;
+    userOutputHolder[6] = structuredResult.averageSylableDuration;
+
 
     console.log(stdout.length);
-    //fixedStdout = stdout.slice(550, 738);
-
     res.render("result", {
-      resultsFromAnalysis: stdout
+      resultsFromAnalysis: userOutputHolder
     });
-
-    //res.send(stdout)
-    //stdout = stdout.toString();
-    //stdout = stdout.split('<<').pop();
-    //console.log(stdout);
-    //console.log(`stdout: ${stdout}`);
-    //console.log(`stderr: ${stderr}`);
   });
 });
 
@@ -410,6 +433,9 @@ app.use(function(req, res, next) {
   next(err);
 });
 
+app.post('/navigator', urlencodedParser, function(req, res) {
+  console.log("choice? " + req.body.choice)
+});
 
 
 
