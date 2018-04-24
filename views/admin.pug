@@ -2,7 +2,7 @@ extends layout
 
 block content
   span(class="centeringForm")
-    h3 Upload a new access code for new users to be made.
+    h3 Upload a new access code for new users to be made:
     form(action='/admin', method='POST', class='centeringForm')
       p
       span(class ="errors")   #{specificErrors[0]}
