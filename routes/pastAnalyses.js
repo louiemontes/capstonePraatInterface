@@ -13,11 +13,10 @@ outputHolder[7] = "";
 
 /* GET result page. */
 router.get('/', function(req, res, next) {
-//  res.render('result', {
-//    title: 'Express',
-//    resultsFromAnalysis: outputHolder
-//  });
-  res.send("Login first!");
+  res.render('result', {
+    title: 'Express',
+    resultsFromAnalysis: outputHolder
+  });
 });
 
 module.exports = router;

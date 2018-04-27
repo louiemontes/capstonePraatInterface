@@ -2,10 +2,12 @@ extends layout
 
 block content
   span(class="centeringForm")
+    h3 Welcome #{username}
     h3 Please upload a sound file for analysis
     form(action='/uploadFile', method='POST', enctype="multipart/form-data" class='centeringForm')
       p
       input(type="file" name="filename")
+      input(type="text" value=username name="username" style={display: "none"})
       br
       br
       br

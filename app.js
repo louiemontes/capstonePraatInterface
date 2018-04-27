@@ -1,5 +1,5 @@
 var mongojs = require("mongojs");
-var db = mongojs("localhost:27017/dbm", ["users", "accessCodes"]);
+var db = mongojs("localhost:27017/dbm", ["users", "accessCodes", "fileHistory"]);
 //var dbAccessCodes = mongojs("localhost:27017/davidBrazilAccessCodes", ["code"]);
 var bcrypt = require('bcryptjs');
 var express = require('express');
@@ -22,6 +22,7 @@ var uploadFile = require('./routes/uploadFile');
 var makeAccount = require('./routes/makeAccount');
 var login = require('./routes/login');
 var admin = require('./routes/admin');
+var navigator = require('./routes/navigator');
 
 var validator = require('express-validator');
 
@@ -55,7 +56,9 @@ app.use('/result', result);
 app.use('/feature', feature);
 app.use('/makeAccount', makeAccount);
 app.use('/login', login);
-app.use('/admin', admin)
+app.use('/admin', admin);
+app.use('/navigator', navigator);
+
 //app.use('/formerrors', formerrors);
 
 
@@ -95,6 +98,10 @@ function decipherArrayFromString(someString) {
 
 
 app.post('/uploadFile', urlencodedParser, function(req, res) {
+  console.log("upload File")
+  console.log(req.body);
+
+
   function isEmpty(obj) {
     return Object.keys(obj).length === 0;
   }
@@ -109,6 +116,7 @@ app.post('/uploadFile', urlencodedParser, function(req, res) {
     if(isEmpty(req.files)) {
       res.render('uploadFile', {
         success: "",
+        username: req.body.username,
         errors: "You must upload .wav file. Please try again."
       });
     }
@@ -116,6 +124,7 @@ app.post('/uploadFile', urlencodedParser, function(req, res) {
     if (!filename.includes(".wav")) {
       res.render('uploadFile', {
         success: "",
+        username: req.body.username,
         errors: "You must upload a .wav file. Please try again."
       });
     } else {
@@ -123,11 +132,13 @@ app.post('/uploadFile', urlencodedParser, function(req, res) {
         if(err){
           res.render('uploadFile', {
             success: "",
+            username: req.body.username,
             errors: err
           });
         } else {
           res.render("feature", {
-            fileTitle: filename
+            fileTitle: filename,
+            username: req.body.username
           });
         }
       });
@@ -135,6 +146,7 @@ app.post('/uploadFile', urlencodedParser, function(req, res) {
   } else {
     res.render('uploadFile', {
       success: "",
+      username: req.body.username,
       errors: "You must upload .wav file. Please try again."
     });
   }
@@ -142,6 +154,30 @@ app.post('/uploadFile', urlencodedParser, function(req, res) {
 
 
 app.post('/feature', urlencodedParser, function(req, res) {
+
+
+
+  var addFileHistory = function(data,cb){
+    data.fileBaseName = data.fileBaseName + ".wav";
+    db.fileHistory.insert({
+      username:data.username,
+      fileBaseName:data.fileBaseName,
+      syllableCount: data.syllableCount,
+      pauseCount: data.pauseCount,
+      speakingTotalDuration: data.speakingTotalDuration,
+      speakingRate: data.speakingRate,
+      articulationRate: data.articulationRate,
+      averageSylableDuration: data.averageSylableDuration,
+      time: data.time
+    }, function(err){
+      cb();
+    });
+  };
+
+
+
+  console.log("feature")
+  console.log(req.body);
 
   //console.log("req.body: " + req.body);
 
@@ -164,6 +200,10 @@ app.post('/feature', urlencodedParser, function(req, res) {
 
     var structuredResult  = JSON.parse(stdout);
 
+    structuredResult.username = req.body.username
+    structuredResult.time = new Date();
+
+    console.log(structuredResult);
     let userOutputHolder = [];
     userOutputHolder[0] = structuredResult.syllableCount;
     userOutputHolder[1] = structuredResult.pauseCount;
@@ -172,6 +212,13 @@ app.post('/feature', urlencodedParser, function(req, res) {
     userOutputHolder[4] = structuredResult.speakingRate;
     userOutputHolder[5] = structuredResult.articulationRate;
     userOutputHolder[6] = structuredResult.averageSylableDuration;
+    userOutputHolder[7] = structuredResult.fileBaseName + ".wav";
+    userOutputHolder[8] = structuredResult.username;
+
+    // adds history of analysis
+    addFileHistory(structuredResult, function(){
+      console.log("File history saved");
+    });
 
 
     console.log(stdout.length);
@@ -227,7 +274,6 @@ app.post('/makeAccount', urlencodedParser, function(req,res) {
       cb();
     });
   };
-
 
 
 
@@ -323,9 +369,21 @@ app.post('/admin', urlencodedParser, function(req,res) {
   inputHolder[0] = req.body.accessCode;
   let errorHolder = [];
   errorHolder[0] = "";
+  let codes = [];
+  let indexBegin = 0;
+  db.accessCodes.find({}, function(err, resp){
+    //console.log(resp);
+    for (let item in resp) {
+    //  console.log(resp[item]);
+      codeNumber = resp[item].code;
+      codes[indexBegin] = codeNumber;;
+     // console.log(resp[item].code + "");
+      indexBegin++;
+    }
+    console.log(codes);
 
-
-  var data = {};
+  });
+    var data = {};
   data.accessCode = inputHolder[0];
 
   console.log("input attempt is: " + data.accessCode);
@@ -355,7 +413,7 @@ app.post('/admin', urlencodedParser, function(req,res) {
       data.accessCode = parseInt(data.accessCode);
       db.accessCodes.insert({code:data.accessCode},function(err){
         console.log("code added");
-        cb();
+//        cb();
       });
       errorHolder[0] = "Access Code added.";
       res.render("admin", {
@@ -396,7 +454,7 @@ app.post('/login', urlencodedParser, function(req,res){
 
   isValidPassword(data, function(resp) {
     if (resp) {
-      console.log("successful login")
+      console.log("successful login");
       inputHolder[0]= "";
       errorHolder[0] = "";
       if(data.username === "admin") {
@@ -408,6 +466,7 @@ app.post('/login', urlencodedParser, function(req,res){
       } else {
         res.render("uploadFile", {
           title: "Upload File",
+          username: req.body.username
         });
       }
     } else {
@@ -434,7 +493,8 @@ app.use(function(req, res, next) {
 });
 
 app.post('/navigator', urlencodedParser, function(req, res) {
-  console.log("choice? " + req.body.choice)
+  console.log(req.body);
+//  console.log("choice? " + req.body.choice);
 });
 
 

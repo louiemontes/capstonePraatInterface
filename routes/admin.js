@@ -6,15 +6,16 @@ inputHolder[0] = "";
 errorHolder[0]="";
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('admin', {
-    title: 'Express',
-    specificInputs: [
-      inputHolder[0]
-    ],
-    specificErrors: [
-      errorHolder[0]
-    ]
-  });
+//  res.render('admin', {
+//    title: 'Express',
+//    specificInputs: [
+//      inputHolder[0]
+//    ],
+//    specificErrors: [
+//      errorHolder[0]
+//    ]
+//  });
+  res.send("Login first!");
 });
 
 module.exports = router;

@@ -2,9 +2,9 @@ extends layout
 
 block content
   span(class="centeringForm")
-    h1 Result of analysis for prosodic events
+    h1 Results of analyzing  #{resultsFromAnalysis[7]} for prosodic events:
     p
-      p Output:
+      p #{resultsFromAnalysis[7]} file output:
       p Syllable Count: #{resultsFromAnalysis[0]}
       p Pause Count: #{resultsFromAnalysis[1]}
       p Total Duration: #{resultsFromAnalysis[2]} seconds
@@ -14,14 +14,11 @@ block content
       p Average Syllable Duration: #{resultsFromAnalysis[6]} seconds
         p
           form(method='POST', class='centeringForm', action='/uploadFile')
-            input(type='text', name='choice', value ="Upload Another File", readOnly='true' disabled="disabled")
+            input(type="text" value=resultsFromAnalysis[8] name="username" style={display: "none"})
             button(class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored mdl-js-ripple-effect", type='submit', title='Submit your requests')
               i(class="material-icons") input
 
           form(method='POST', class='centeringForm', action='/pastAnalyses')
-            input(type='text', name='choice', value ="See Past Analyses", readOnly='true', disabled="disabled" )
+            input(type="text" value=resultsFromAnalysis[8] name="username" style={display: "none"})
             button(class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored mdl-js-ripple-effect", type='submit', title='Submit your requests')
               i(class="material-icons") history
-
-      a(class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect", type='submit') See Previous Analyses
-
