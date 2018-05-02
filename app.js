@@ -370,24 +370,21 @@ app.post('/admin', urlencodedParser, function(req,res) {
   inputHolder[0] = req.body.accessCode;
   let errorHolder = [];
   errorHolder[0] = "";
+  errorHolder[1] = "";
   let codes = [];
   let indexBegin = 0;
   db.accessCodes.find({}, function(err, resp){
-    //console.log(resp);
     for (let item in resp) {
-    //  console.log(resp[item]);
       codeNumber = resp[item].code;
       codes[indexBegin] = codeNumber;
-     // console.log(resp[item].code + "");
       indexBegin++;
     }
-    console.log(codes);
-
+    errorHolder[1] = codes;
   });
-    var data = {};
+
+  var data = {};
   data.accessCode = inputHolder[0];
 
-  console.log("input attempt is: " + data.accessCode);
   var isCodeTaken = function (data, cb) {
     db.accessCodes.find({code:data.accessCode},function(err,resp){
       if(resp.length > 0) {
@@ -401,32 +398,61 @@ app.post('/admin', urlencodedParser, function(req,res) {
   };
 
   isCodeTaken(data, function(resp) {
+    let inputHolder = [];
+    let errorHolder = [];
+    let codeNumber;
+    let codes = [];
+    let indexBegin = 0;
     if(resp) {
-      //render error
-      errorHolder[0] = "Access Code already waiting to be used.";
-      res.render("admin", {
-        title: "Admin Page",
-        specificErrors: errorHolder,
-        specificInputs: inputHolder
+      db.accessCodes.find({}, function(err, resp){
+        for (let item in resp) {
+        //  console.log(resp[item]);
+          codeNumber = resp[item].code;
+          codes[indexBegin] = codeNumber;
+         // console.log(resp[item].code + "");
+          indexBegin++;
+        }
+        errorHolder[0] = "Access Code already waiting to be used.";
+        errorHolder[1] = codes;
+        res.render("admin", {
+          title: "Admin Page",
+          specificInputs: inputHolder,
+          specificErrors: errorHolder
+        });
       });
     } else if ( isNaN(parseInt(data.accessCode)))  {
-      errorHolder[0] = "Access Code was a string.";
-      res.render("admin", {
-        title: "Admin Page",
-        specificErrors: errorHolder,
-        specificInputs: inputHolder
+      db.accessCodes.find({}, function(err, resp){
+        for (let item in resp) {
+          codeNumber = resp[item].code;
+          codes[indexBegin] = codeNumber;
+          indexBegin++;
+        }
+        errorHolder[0] = "Access Code was a string.";
+        errorHolder[1] = codes;
+        res.render("admin", {
+          title: "Admin Page",
+          specificInputs: inputHolder,
+          specificErrors: errorHolder
+        });
       });
     } else {
       // insert and render success
       db.accessCodes.insert({code:data.accessCode},function(err){
         console.log("code added");
-  //      cb();
       });
-      errorHolder[0] = "Access Code added.";
-      res.render("admin", {
-        title: "Admin Page",
-        specificErrors: errorHolder,
-        specificInputs: inputHolder
+      db.accessCodes.find({}, function(err, resp){
+        for (let item in resp) {
+          codeNumber = resp[item].code;
+          codes[indexBegin] = codeNumber;
+          indexBegin++;
+        }
+        errorHolder[0] = "Access Code was added.";
+        errorHolder[1] = codes;
+        res.render("admin", {
+          title: "Admin Page",
+          specificErrors: errorHolder,
+          specificInputs: inputHolder
+        });
       });
     }
   });
@@ -462,13 +488,28 @@ app.post('/login', urlencodedParser, function(req,res){
   isValidPassword(data, function(resp) {
     if (resp) {
       console.log("successful login");
-      inputHolder[0]= "";
-      errorHolder[0] = "";
       if(data.username === "admin") {
-        res.render("admin", {
-          title: "Admin Page",
-          specificInputs: inputHolder,
-          specificErrors: errorHolder
+        let inputHolder = [];
+        let errorHolder = [];
+        let codeNumber;
+        let codes = [];
+        let indexBegin = 0;
+
+        db.accessCodes.find({}, function(err, resp){
+          for (let item in resp) {
+          //  console.log(resp[item]);
+            codeNumber = resp[item].code;
+            codes[indexBegin] = codeNumber;
+           // console.log(resp[item].code + "");
+            indexBegin++;
+          }
+          console.log(codes);
+          errorHolder[1] = codes;
+          res.render("admin", {
+            title: "Admin Page",
+            specificInputs: inputHolder,
+            specificErrors: errorHolder
+          });
         });
       } else {
         res.render("uploadFile", {

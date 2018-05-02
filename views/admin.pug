@@ -2,7 +2,6 @@ extends layout
 
 block content
   span(class="centeringForm")
-    - var values = codes
     h3 Upload a new access code for new users to be made:
     form(action='/admin', method='POST', class='centeringForm')
       p
@@ -11,4 +10,10 @@ block content
       br
       button(class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored mdl-js-ripple-effect", type='submit', value="upload" title='Submit your files')
         i(class="material-icons") input
+    h3 Current access codes:
+      ul(class="noBullets")
+        each val in specificErrors[1]
+          li= val
+
+
 

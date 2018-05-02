@@ -4,6 +4,8 @@ var inputHolder = [];
 var errorHolder= [];
 inputHolder[0] = "";
 errorHolder[0]="";
+errorHolder[1]="";
+
 /* GET home page. */
 router.get('/', function(req, res, next) {
 //  res.render('admin', {
