@@ -191,6 +191,7 @@ app.post('/feature', urlencodedParser, function(req, res) {
    let cleanUpCommand = " ; rm ./soundFiles/" + userSelectedSoundFile + " ; rm ./soundFiles/" + userSelectedSoundFile + ".TextGrid";
 
   let scriptCommand = praatStartCommand + praatSpecificScript + praatScriptDefaults + serverTempStoragePath + userSelectedSoundFile + cleanUpCommand;
+  console.log(scriptCommand);
   exec(scriptCommand,  (error, stdout, stderr) => {
     if (error) {
       console.error(`exec error: ${error}`);
@@ -376,7 +377,7 @@ app.post('/admin', urlencodedParser, function(req,res) {
     for (let item in resp) {
     //  console.log(resp[item]);
       codeNumber = resp[item].code;
-      codes[indexBegin] = codeNumber;;
+      codes[indexBegin] = codeNumber;
      // console.log(resp[item].code + "");
       indexBegin++;
     }
@@ -408,12 +409,18 @@ app.post('/admin', urlencodedParser, function(req,res) {
         specificErrors: errorHolder,
         specificInputs: inputHolder
       });
+    } else if ( isNaN(parseInt(data.accessCode)))  {
+      errorHolder[0] = "Access Code was a string.";
+      res.render("admin", {
+        title: "Admin Page",
+        specificErrors: errorHolder,
+        specificInputs: inputHolder
+      });
     } else {
       // insert and render success
-      data.accessCode = parseInt(data.accessCode);
       db.accessCodes.insert({code:data.accessCode},function(err){
         console.log("code added");
-//        cb();
+  //      cb();
       });
       errorHolder[0] = "Access Code added.";
       res.render("admin", {
