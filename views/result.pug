@@ -15,10 +15,12 @@ block content
         p
           form(method='POST', class='centeringForm', action='/uploadFile')
             input(type="text" value=resultsFromAnalysis[8] name="username" style={display: "none"})
+            span Go to Upload File: 
             button(class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored mdl-js-ripple-effect", type='submit', title='Submit your requests')
               i(class="material-icons") input
 
           form(method='POST', class='centeringForm', action='/pastAnalyses')
             input(type="text" value=resultsFromAnalysis[8] name="username" style={display: "none"})
+            span Go to Past Analyses: 
             button(class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored mdl-js-ripple-effect", type='submit', title='Submit your requests')
               i(class="material-icons") history

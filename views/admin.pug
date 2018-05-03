@@ -6,10 +6,13 @@ block content
     form(action='/admin', method='POST', class='centeringForm')
       p
       span(class ="errors")   #{specificErrors[0]}
+      p
       input(type="integer" name="accessCode")
       br
-      button(class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored mdl-js-ripple-effect", type='submit', value="upload" title='Submit your files')
-        i(class="material-icons") input
+      p Add Code: 
+        button(class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored mdl-js-ripple-effect", type='submit', value="upload" title='Submit your files')
+          i(class="material-icons") input
+
     h3 Current access codes:
       ul(class="noBullets")
         each val in specificErrors[1]

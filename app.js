@@ -22,6 +22,7 @@ var uploadFile = require('./routes/uploadFile');
 var makeAccount = require('./routes/makeAccount');
 var login = require('./routes/login');
 var admin = require('./routes/admin');
+var pastAnalyses = require('./routes/pastAnalyses');
 var navigator = require('./routes/navigator');
 
 var validator = require('express-validator');
@@ -57,6 +58,7 @@ app.use('/feature', feature);
 app.use('/makeAccount', makeAccount);
 app.use('/login', login);
 app.use('/admin', admin);
+app.use('/pastAnalyses', pastAnalyses);
 app.use('/navigator', navigator);
 
 //app.use('/formerrors', formerrors);
@@ -455,6 +457,48 @@ app.post('/admin', urlencodedParser, function(req,res) {
         });
       });
     }
+  });
+});
+
+app.post('/pastAnalyses', urlencodedParser, function(req,res){
+  let inputHolder = [];
+  let outputHolder = [];
+  let errorHolder = [];
+  errorHolder[0] = "";
+  inputHolder[0] = req.body.username;
+
+  let listOfHistories = [];
+  let listIndexer = 0;
+  db.fileHistory.find({username: inputHolder[0]}, function(err, resp){
+    for (let item in resp) {
+      listOfHistories[listIndexer] = new Object();
+      listOfHistories[listIndexer].fileBaseName = resp[item].fileBaseName;
+      listOfHistories[listIndexer].syllableCount = resp[item].syllableCount;
+      listOfHistories[listIndexer].pauseCount = resp[item].pauseCount;
+      listOfHistories[listIndexer].speakingTotalDuration = resp[item].speakingTotalDuration;
+      listOfHistories[listIndexer].speakingRate = resp[item].speakingRate;
+      listOfHistories[listIndexer].articulationRate = resp[item].articulationRate;
+      listOfHistories[listIndexer].averageSylableDuration = resp[item].averageSylableDuration;
+      listOfHistories[listIndexer].time = (resp[item].time).getTime();
+      listIndexer++;
+    }
+    console.log("First entry " + listOfHistories[0]);
+    // sort by value
+    listOfHistories.sort(function (a, b) {
+      return b.time - a.time;
+    });
+
+    for (let i = 0; i < listOfHistories.length; i++) {
+      listOfHistories[i].time = new Date(listOfHistories[i].time);
+    }
+    outputHolder[0] = listOfHistories;
+    console.log("What is put into the outputHolder, bruv: " + outputHolder[0]);
+    res.render("pastAnalyses", {
+      title: "Past Analyes Page",
+      specificInputs: inputHolder,
+      specificOutputs: outputHolder,
+      specificErrors: errorHolder
+    });
   });
 });
 

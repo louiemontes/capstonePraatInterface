@@ -3,18 +3,22 @@ extends layout
 block content
   span(class="centeringForm")
     h3 Welcome #{username}
-    h3 Please upload a sound file for analysis
-    form(action='/uploadFile', method='POST', enctype="multipart/form-data" class='centeringForm')
-      p
-      input(type="file" name="filename")
-      input(type="text" value=username name="username" style={display: "none"})
-      br
-      br
-      br
-      button(class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored mdl-js-ripple-effect", type='submit', value="upload" title='Submit your requests')
-        i(class="material-icons") eject
 
-    p
+    h3 See your past analyses
+      form(method='POST', class='centeringForm', action='/pastAnalyses')
+        input(type="text" value=username name="username" style={display: "none"})
+        p Go to Past Analyses: 
+          button(class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored mdl-js-ripple-effect", type='submit', title='Submit your requests')
+            i(class="material-icons") history
+
+    h3 Or upload a sound file for analysis
+      form(action='/uploadFile', method='POST', enctype="multipart/form-data" class='centeringForm')
+        input(type="file" name="filename")
+        input(type="text" value=username name="username" style={display: "none"})
+        p Confirm Upload: 
+          button(class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored mdl-js-ripple-effect", type='submit', value="upload" title='Submit your requests')
+            i(class="material-icons") eject
+      p
       span(class="errors")   #{errors}
       br
       br

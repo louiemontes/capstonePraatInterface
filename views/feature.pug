@@ -3,10 +3,10 @@ extends layout
 block content
   span(class="centeringForm")
     h1 #{username},
-    h1 Click button to confirm analysis of #{fileTitle}
+    h1 Awaiting confrimation to analyze #{fileTitle}
   form(action='/feature', method='POST', class='centeringForm')
     input(type='text', name='filename', value = fileTitle, readOnly='true')
     input(type="text" value=username name="username" style={display: "none"})
-
-    button(class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored mdl-js-ripple-effect", type='submit', title='Submit your requests')
-      i(class="material-icons") send
+    p Confirm: 
+      button(class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored mdl-js-ripple-effect", type='submit', title='Submit your requests')
+        i(class="material-icons") send

@@ -1,0 +1,21 @@
+extends layout
+
+block content
+  span(class="centeringForm")
+    h3 Past Analyses #{specificInputs[0]} :
+      ul(class="noBullets")
+        each object in specificOutputs[0]
+          ul
+            each val, index in object
+              li= index + ': ' + val
+            br
+
+    h3 Take me to upload another file!
+      form(method='POST', class='centeringForm', action='/uploadFile')
+        input(type="text" value=specificInputs[0] name="username" style={display: "none"})
+        p Go to Upload File: 
+        button(class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored mdl-js-ripple-effect", type='submit', title='Submit your requests')
+          i(class="material-icons") input
+
+
+

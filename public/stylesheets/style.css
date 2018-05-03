@@ -30,5 +30,13 @@ a {
 }
 
 .noBullets {
+  height: 400px;
+  overflow-y: scroll;
+  padding-left: 20%;
+  padding-right: 25%;
+  list-style-type: none;
+}
+
+.noBullets ul{
   list-style-type: none;
 }
