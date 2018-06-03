@@ -12,3 +12,4 @@ $ npm start
 ```
 
 Then go to http://127.0.0.1:3000/ in your browser of choice.
+Repo is for local build, DigitalOcean build is a little different.
